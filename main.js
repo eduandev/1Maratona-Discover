@@ -1,80 +1,154 @@
 const Modal = {
     open() {  // Abrir modal, adiciona a class ative no modal
-        
+
         document
-        .querySelector('.modal-overlay')
-        .classList
-        .add('active');    
+            .querySelector('.modal-overlay')
+            .classList
+            .add('active');
     },
 
     close() { // Fechar modal, retira a class ative no modal
 
         document
-        .querySelector('.modal-overlay')
-        .classList
-        .remove('active');
-}
+            .querySelector('.modal-overlay')
+            .classList
+            .remove('active');
+    }
 };
+
+//===========================================================
 
 const objectsTransactions = [
 
-    {   
+    {
         id: '1',
         description: 'Salario',
         amount: 200000,
-        date:13/05/2020
+        date: '13/05/2020',
     },
-    {   
-        id: '1',
+    {
+        id: '2',
         description: 'Agua',
         amount: -3000,
-        date:13/05/2020
+        date: '13/05/2020',
     },
-    {   
-        id: '1',
+    {
+        id: '3',
         description: 'Luz',
         amount: -9000,
-        date:13/05/2020
+        date: '13/05/2020',
     }
 ];
 
-const amounTransactions = {
+//===========================================================
 
-    incomes(){ // Somar entradas
+const amounTransactions = {  // Transaction Somar entradas
 
+    all: objectsTransactions,
+
+    incomes() {
+        let income = 0;
+        amounTransactions.all.forEach(transaction => {
+
+            if (transaction.amount > 0) {
+
+                income += transaction.amount;
+            }
+        })
+
+        return income;
     },
 
-    expensives(){ // Somar saídas
-    
+    expenses() { // Somar saídas
+        let expense = 0;
+        amounTransactions.all.forEach(transaction => {
+
+            if (transaction.amount < 0) {
+
+                expense += transaction.amount;
+
+            }
+
+        })
+
+        return expense;
     },
 
-    total(){ // Obter o valor total
-    
+    total() { // Obter o valor total
+
+        return amounTransactions.incomes() + amounTransactions.expenses();
     }
 };
 
-const manipulate = {
+//===========================================================
+
+const manipulate = {   // Dom
 
     transactionContainer: document.querySelector('#data-table tbody'),
 
-    addTransaction(objectsTransactions, index){
+    addTransaction(transaction, index) {
         const tr = document.createElement('tr')
-        tr.innerHTML = manipulate.innerHtmlTransactions(objectsTransactions)
-        
-        
-            
+        tr.innerHTML = manipulate.innerHtmlTransactions(transaction)
+
+        manipulate.transactionContainer.appendChild(tr)
     },
 
-    innerHtmlTransactions(objectsTransactions){
-        const html = 
-            `<td class="description">${objectsTransactions.description}</td>
-            <td class="expense">${objectsTransactions.amount}</td>
-            <td class="date">${objectsTransactions.date}</td>
-            <td>
-            <img src="./assets/minus.svg" alt="Remover transação">
-            </td> `
-        return html;    
+    //--------------------------------------------------------------------
+
+    innerHtmlTransactions(transaction) {
+
+        const CSSclass = transaction.amount > 0 ? "income" : "expense" // ? - Então, : - Se não
+
+        const amountForm = Utils.formatCurrency(transaction.amount)
+
+        const html =
+            `<td class="description">${transaction.description}</td>
+        <td class="${CSSclass}">${amountForm}</td>
+        <td class="date">${transaction.date}</td>
+        <td>
+        <img src="./assets/minus.svg" alt="Remover transação">
+        </td> `
+        return html;
+    },
+
+    //------------------------------------------------------------------------------
+
+    updateBalance() {
+        document
+            .getElementById('incomeDisplay')
+            .innerHTML = Utils.formatCurrency(amounTransactions.incomes());
+        document
+            .getElementById('expenseDisplay')
+            .innerHTML = Utils.formatCurrency(amounTransactions.expenses());
+        document
+            .getElementById('totalDisplay')
+            .innerHTML = Utils.formatCurrency(amounTransactions.total());
     }
 };
 
-manipulate.addTransaction(objectsTransactions[2]);
+//===========================================================
+
+const Utils = {
+    formatCurrency(value) {
+        const signal = Number(value) < 0 ? "-" : ""
+
+        value = String(value).replace(/\D/g, "")  // /\D/ - Expressão regular faz a troca global(g) de tudo que não é numero por "".
+        value = Number(value) / 100
+        value = value.toLocaleString('pt-BR', { // Local Brasil
+            style: "currency", // Moeda
+            currency: "BRL", // Real Brasileiro
+        })
+        return signal + value;
+    }
+
+};
+
+//===========================================================
+
+objectsTransactions.forEach(function (transaction) {
+    manipulate.addTransaction(transaction)
+});
+
+//===========================================================
+
+manipulate.updateBalance();
