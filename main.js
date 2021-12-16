@@ -21,19 +21,16 @@ const Modal = {
 const objectsTransactions = [
 
     {
-        id: '1',
         description: 'Salario',
         amount: 200000,
         date: '13/05/2020',
     },
     {
-        id: '2',
         description: 'Agua',
         amount: -3000,
         date: '13/05/2020',
     },
     {
-        id: '3',
         description: 'Luz',
         amount: -9000,
         date: '13/05/2020',
@@ -46,7 +43,18 @@ const amounTransactions = {  // Transaction Somar entradas
 
     all: objectsTransactions,
 
-    incomes() {
+    add(transaction){
+        amounTransactions.all.push(transaction)
+        
+        App.reload();
+    },
+
+    remove(index){
+      amounTransactions.all.splice(index, 1)
+      App.reload();
+    },
+
+    incomes(){
         let income = 0;
         amounTransactions.all.forEach(transaction => {
 
@@ -59,7 +67,7 @@ const amounTransactions = {  // Transaction Somar entradas
         return income;
     },
 
-    expenses() { // Somar saídas
+    expenses(){ // Somar saídas
         let expense = 0;
         amounTransactions.all.forEach(transaction => {
 
@@ -74,7 +82,7 @@ const amounTransactions = {  // Transaction Somar entradas
         return expense;
     },
 
-    total() { // Obter o valor total
+    total(){ // Obter o valor total
 
         return amounTransactions.incomes() + amounTransactions.expenses();
     }
@@ -111,7 +119,7 @@ const manipulate = {   // Dom
         return html;
     },
 
-    //------------------------------------------------------------------------------
+    //------------------------------------------------------
 
     updateBalance() {
         document
@@ -123,7 +131,10 @@ const manipulate = {   // Dom
         document
             .getElementById('totalDisplay')
             .innerHTML = Utils.formatCurrency(amounTransactions.total());
-    }
+    },
+    clearTransaction(){
+        manipulate.transactionContainer.innerHTML = ""
+    },
 };
 
 //===========================================================
@@ -143,12 +154,84 @@ const Utils = {
 
 };
 
+const Form = {
+    description: document.querySelector('input#description'),
+    amount: document.querySelector('input#amount'),
+    date: document.querySelector('input#date'),
+
+
+// Campo responsável por pescar os dados
+    getValues(){
+    return{
+        description: Form.description.value,
+        amount: Form.amount.value,
+        date: Form.date.value,
+    }
+    },
+
+// Campo responsável por verificar se os dados foram formatados
+    formatData(){
+         
+
+    },
+
+// Campo  responsável por verificar se as informações foram preechidas
+    validateField(){ 
+
+    const {description, amount, date} = Form.getValues();
+    
+    console.log(Form.getValues());
+        if(description.trim() === "" ||  // trim() - Serve para fazer uma limpeza dos espaços vazios
+           amount.trim() === "" || 
+           date.trim() === ""){
+
+           throw new Error("Por favor, preencha todos os campos")
+           }
+    },
+
+    submit(event){
+        
+//Função que retira o comportamento padrão do envio do formulario
+       event.preventDefault() 
+       
+       
+        // try{
+
+         //}
+
+
+    Form.formatData()    
+    Form.validateField()
+
+    }
+}
+
+
 //===========================================================
 
-objectsTransactions.forEach(function (transaction) {
-    manipulate.addTransaction(transaction)
-});
+const App = {
+    init(){
 
-//===========================================================
+        amounTransactions.all.forEach(transaction => {
+            manipulate.addTransaction(transaction)
+        });
 
-manipulate.updateBalance();
+        manipulate.updateBalance();
+
+    },
+
+    reload(){
+
+        manipulate.clearTransaction();
+        App.init();
+
+    },
+};
+
+App.init();
+
+
+amounTransactions.remove(1)
+
+
+
