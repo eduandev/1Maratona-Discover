@@ -16,47 +16,42 @@ const Modal = {
     }
 };
 
-//===========================================================
+const Storage = {
 
-const objectsTransactions = [
+    get(){
 
-    {
-        description: 'Salario',
-        amount: 200000,
-        date: '13/05/2020',
+        return JSON.parse(localStorage.getItem('devfinances:transaction')) || [];
     },
-    {
-        description: 'Agua',
-        amount: -3000,
-        date: '13/05/2020',
-    },
-    {
-        description: 'Luz',
-        amount: -9000,
-        date: '13/05/2020',
+    set(transaction){
+        localStorage.setItem("devfinances:transaction", JSON.stringify(transaction))
+
     }
-];
+};
+
 
 //===========================================================
 
-const amounTransactions = {  // Transaction Somar entradas
 
-    all: objectsTransactions,
+
+//===========================================================
+
+const Transaction = {  // Transaction Somar entradas
+
+    all: Storage.get(),
 
     add(transaction){
-        amounTransactions.all.push(transaction)
-        
-        App.reload();
+        Transaction.all.push(transaction)
+        App.reload()
     },
 
     remove(index){
-      amounTransactions.all.splice(index, 1)
-      App.reload();
+      Transaction.all.splice(index, 1)
+      App.reload()
     },
 
     incomes(){
         let income = 0;
-        amounTransactions.all.forEach(transaction => {
+        Transaction.all.forEach(transaction => {
 
             if (transaction.amount > 0) {
 
@@ -69,7 +64,7 @@ const amounTransactions = {  // Transaction Somar entradas
 
     expenses(){ // Somar saídas
         let expense = 0;
-        amounTransactions.all.forEach(transaction => {
+        Transaction.all.forEach(transaction => {
 
             if (transaction.amount < 0) {
 
@@ -84,7 +79,7 @@ const amounTransactions = {  // Transaction Somar entradas
 
     total(){ // Obter o valor total
 
-        return amounTransactions.incomes() + amounTransactions.expenses();
+        return Transaction.incomes() + Transaction.expenses();
     }
 };
 
@@ -96,14 +91,15 @@ const manipulate = {   // Dom
 
     addTransaction(transaction, index) {
         const tr = document.createElement('tr')
-        tr.innerHTML = manipulate.innerHtmlTransactions(transaction)
+        tr.innerHTML = manipulate.innerHtmlTransactions(transaction, index)
+        tr.dataset.index = index
 
         manipulate.transactionContainer.appendChild(tr)
     },
 
     //--------------------------------------------------------------------
 
-    innerHtmlTransactions(transaction) {
+    innerHtmlTransactions(transaction, index) {
 
         const CSSclass = transaction.amount > 0 ? "income" : "expense" // ? - Então, : - Se não
 
@@ -114,7 +110,7 @@ const manipulate = {   // Dom
         <td class="${CSSclass}">${amountForm}</td>
         <td class="date">${transaction.date}</td>
         <td>
-        <img src="./assets/minus.svg" alt="Remover transação">
+        <img onclick="Transaction.remove(${index})" src="./assets/minus.svg" alt="Remover transação">
         </td> `
         return html;
     },
@@ -124,13 +120,13 @@ const manipulate = {   // Dom
     updateBalance() {
         document
             .getElementById('incomeDisplay')
-            .innerHTML = Utils.formatCurrency(amounTransactions.incomes());
+            .innerHTML = Utils.formatCurrency(Transaction.incomes());
         document
             .getElementById('expenseDisplay')
-            .innerHTML = Utils.formatCurrency(amounTransactions.expenses());
+            .innerHTML = Utils.formatCurrency(Transaction.expenses());
         document
             .getElementById('totalDisplay')
-            .innerHTML = Utils.formatCurrency(amounTransactions.total());
+            .innerHTML = Utils.formatCurrency(Transaction.total());
     },
     clearTransaction(){
         manipulate.transactionContainer.innerHTML = ""
@@ -140,6 +136,20 @@ const manipulate = {   // Dom
 //===========================================================
 
 const Utils = {
+
+// Função responsável por formatar o valor da quantia digitado pelo usuário
+    formatAmount(value){
+    value = Number(value) * 100; // Recebe o valor em forma de String ou pontos e virgulas, pra ser formatado 
+    return value;
+    },
+
+// Função responsável por formatar a data digitado pelo usuário
+   formatDate(date){
+   const splitDate = date.split('-');
+   return `${splitDate[2]}/${splitDate[1]}/${splitDate[0]}` // Retorna essa ordem da data 
+   },
+
+// Função responsável por formatar os dados da moeda
     formatCurrency(value) {
         const signal = Number(value) < 0 ? "-" : ""
 
@@ -151,7 +161,6 @@ const Utils = {
         })
         return signal + value;
     }
-
 };
 
 const Form = {
@@ -170,17 +179,22 @@ const Form = {
     },
 
 // Campo responsável por verificar se os dados foram formatados
-    formatData(){
-         
+    formatValue(){
+         let {description, amount, date} = Form.getValues()
 
+         amount = Utils.formatAmount(amount);
+         date = Utils.formatDate(date);
+
+         return {description, 
+                 amount, 
+                 date}
     },
 
-// Campo  responsável por verificar se as informações foram preechidas
+// Campo  responsável por verificar se as informações foram preenchidas
     validateField(){ 
 
     const {description, amount, date} = Form.getValues();
     
-    console.log(Form.getValues());
         if(description.trim() === "" ||  // trim() - Serve para fazer uma limpeza dos espaços vazios
            amount.trim() === "" || 
            date.trim() === ""){
@@ -189,22 +203,48 @@ const Form = {
            }
     },
 
+// Campo  responsável por limpar as informações que foram preenchidas
+    clearField(){
+    Form.description.value = ""
+    Form.amount.value = ""
+    Form.date.value = ""
+    },
+
     submit(event){
         
 //Função que retira o comportamento padrão do envio do formulario
        event.preventDefault() 
        
        
-        // try{
+        try{   // Tente executar esses passos
+            
+            // Validar os dados do formulario
+            Form.validateField()
 
-         //}
+            // Salvar os dados do formulario
+            const transaction = Form.formatValue()
+            Transaction.add(transaction)
+
+            // Apagar os dados do formulario
+            Form.clearField()
+
+            // Fechar o modal
+            Modal.close()
+
+            // Atualizar a aplicação
+            App.reload()
+
+        }catch(error){ // Caso passos não executado captura o erro
+
+            alert(error.message)
+
+        }
 
 
-    Form.formatData()    
-    Form.validateField()
+    Form.formatValue()   
 
     }
-}
+};
 
 
 //===========================================================
@@ -212,11 +252,11 @@ const Form = {
 const App = {
     init(){
 
-        amounTransactions.all.forEach(transaction => {
-            manipulate.addTransaction(transaction)
-        });
+        Transaction.all.forEach(manipulate.addTransaction)
 
         manipulate.updateBalance();
+
+        Storage.set(Transaction.all);
 
     },
 
@@ -231,7 +271,7 @@ const App = {
 App.init();
 
 
-amounTransactions.remove(1)
+
 
 
 
