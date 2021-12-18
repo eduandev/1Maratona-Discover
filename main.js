@@ -18,20 +18,15 @@ const Modal = {
 
 const Storage = {
 
-    get(){
+    get() {
 
         return JSON.parse(localStorage.getItem('devfinances:transaction')) || [];
     },
-    set(transaction){
-        localStorage.setItem("devfinances:transaction", JSON.stringify(transaction))
+    set(transaction) {
 
+        localStorage.setItem("devfinances:transaction", JSON.stringify(transaction))
     }
 };
-
-
-//===========================================================
-
-
 
 //===========================================================
 
@@ -39,17 +34,17 @@ const Transaction = {  // Transaction Somar entradas
 
     all: Storage.get(),
 
-    add(transaction){
+    add(transaction) {
         Transaction.all.push(transaction)
         App.reload()
     },
 
-    remove(index){
-      Transaction.all.splice(index, 1)
-      App.reload()
+    remove(index) {
+        Transaction.all.splice(index, 1)
+        App.reload()
     },
 
-    incomes(){
+    incomes() {
         let income = 0;
         Transaction.all.forEach(transaction => {
 
@@ -62,22 +57,20 @@ const Transaction = {  // Transaction Somar entradas
         return income;
     },
 
-    expenses(){ // Somar saídas
+    expenses() { // Somar saídas
         let expense = 0;
         Transaction.all.forEach(transaction => {
 
             if (transaction.amount < 0) {
 
                 expense += transaction.amount;
-
             }
-
         })
 
         return expense;
     },
 
-    total(){ // Obter o valor total
+    total() { // Obter o valor total
 
         return Transaction.incomes() + Transaction.expenses();
     }
@@ -128,7 +121,7 @@ const manipulate = {   // Dom
             .getElementById('totalDisplay')
             .innerHTML = Utils.formatCurrency(Transaction.total());
     },
-    clearTransaction(){
+    clearTransaction() {
         manipulate.transactionContainer.innerHTML = ""
     },
 };
@@ -137,19 +130,19 @@ const manipulate = {   // Dom
 
 const Utils = {
 
-// Função responsável por formatar o valor da quantia digitado pelo usuário
-    formatAmount(value){
-    value = Number(value) * 100; // Recebe o valor em forma de String ou pontos e virgulas, pra ser formatado 
-    return value;
+    // Função responsável por formatar o valor da quantia digitado pelo usuário
+    formatAmount(value) {
+        value = Number(value) * 100; // Recebe o valor em forma de String ou pontos e virgulas, pra ser formatado 
+        return Math.round(value)     // Arredondar para que haja um valor legivel
     },
 
-// Função responsável por formatar a data digitado pelo usuário
-   formatDate(date){
-   const splitDate = date.split('-');
-   return `${splitDate[2]}/${splitDate[1]}/${splitDate[0]}` // Retorna essa ordem da data 
-   },
+    // Função responsável por formatar a data digitado pelo usuário
+    formatDate(date) {
+        const splitDate = date.split('-');
+        return `${splitDate[2]}/${splitDate[1]}/${splitDate[0]}` // Retorna essa ordem da data 
+    },
 
-// Função responsável por formatar os dados da moeda
+    // Função responsável por formatar os dados da moeda
     formatCurrency(value) {
         const signal = Number(value) < 0 ? "-" : ""
 
@@ -159,6 +152,7 @@ const Utils = {
             style: "currency", // Moeda
             currency: "BRL", // Real Brasileiro
         })
+
         return signal + value;
     }
 };
@@ -169,55 +163,57 @@ const Form = {
     date: document.querySelector('input#date'),
 
 
-// Campo responsável por pescar os dados
-    getValues(){
-    return{
-        description: Form.description.value,
-        amount: Form.amount.value,
-        date: Form.date.value,
-    }
+    // Campo responsável por pescar os dados
+    getValues() {
+        return {
+            description: Form.description.value,
+            amount: Form.amount.value,
+            date: Form.date.value,
+        }
     },
 
-// Campo responsável por verificar se os dados foram formatados
-    formatValue(){
-         let {description, amount, date} = Form.getValues()
+    // Campo responsável por verificar se os dados foram formatados
+    formatValue() {
 
-         amount = Utils.formatAmount(amount);
-         date = Utils.formatDate(date);
+        let { description, amount, date } = Form.getValues()
 
-         return {description, 
-                 amount, 
-                 date}
+        amount = Utils.formatAmount(amount);
+        date = Utils.formatDate(date);
+
+        return {
+            description,
+            amount,
+            date
+        }
     },
 
-// Campo  responsável por verificar se as informações foram preenchidas
-    validateField(){ 
+    // Campo  responsável por verificar se as informações foram preenchidas
+    validateField() {
 
-    const {description, amount, date} = Form.getValues();
-    
-        if(description.trim() === "" ||  // trim() - Serve para fazer uma limpeza dos espaços vazios
-           amount.trim() === "" || 
-           date.trim() === ""){
+        const { description, amount, date } = Form.getValues();
 
-           throw new Error("Por favor, preencha todos os campos")
-           }
+        if (description.trim() === "" ||  // trim() - Serve para fazer uma limpeza dos espaços vazios
+            amount.trim() === "" ||
+            date.trim() === "") {
+
+            throw new Error("Por favor, preencha todos os campos")
+        }
     },
 
-// Campo  responsável por limpar as informações que foram preenchidas
-    clearField(){
-    Form.description.value = ""
-    Form.amount.value = ""
-    Form.date.value = ""
+    // Campo  responsável por limpar as informações que foram preenchidas
+    clearField() {
+        Form.description.value = ""
+        Form.amount.value = ""
+        Form.date.value = ""
     },
 
-    submit(event){
-        
-//Função que retira o comportamento padrão do envio do formulario
-       event.preventDefault() 
-       
-       
-        try{   // Tente executar esses passos
-            
+    submit(event) {
+
+        //Função que retira o comportamento padrão do envio do formulario
+        event.preventDefault()
+
+        try {   // Tente executar esses passos
+
             // Validar os dados do formulario
             Form.validateField()
 
@@ -234,37 +230,29 @@ const Form = {
             // Atualizar a aplicação
             App.reload()
 
-        }catch(error){ // Caso passos não executado captura o erro
+        } catch (error) { // Caso passos não executado captura o erro
 
             alert(error.message)
-
         }
 
-
-    Form.formatValue()   
-
+        Form.formatValue()
     }
 };
-
 
 //===========================================================
 
 const App = {
-    init(){
+    init() {
 
         Transaction.all.forEach(manipulate.addTransaction)
-
         manipulate.updateBalance();
-
         Storage.set(Transaction.all);
-
     },
 
-    reload(){
+    reload() {
 
         manipulate.clearTransaction();
         App.init();
-
     },
 };
 
